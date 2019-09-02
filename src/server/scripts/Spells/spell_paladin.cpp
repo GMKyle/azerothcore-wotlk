@@ -69,6 +69,8 @@ enum PaladinSpells
     SPELL_PALADIN_IMPROVED_DEVOTION_AURA         = 63514,
     SPELL_PALADIN_SANCTIFIED_RETRIBUTION_AURA    = 63531,
     SPELL_PALADIN_AURA_MASTERY_IMMUNE            = 64364,
+    
+    SPELL_PALADIN_SHEATH_OF_LIGHT_HEAL           = 54203,
 
     SPELL_GENERIC_ARENA_DAMPENING                = 74410,
     SPELL_GENERIC_BATTLEGROUND_DAMPENING         = 74411
@@ -288,6 +290,54 @@ class spell_pal_sacred_shield_base : public SpellScriptLoader
         }
 };
 
+// -53501 - Sheath of Light
+class spell_pal_sheath_of_light : public SpellScriptLoader
+{
+    public:
+        spell_pal_sheath_of_light() : SpellScriptLoader("spell_pal_sheath_of_light") { }
+
+        class spell_pal_sheath_of_light_AuraScript : public AuraScript
+        {
+            PrepareAuraScript(spell_pal_sheath_of_light_AuraScript);
+
+            bool Validate(SpellInfo const* /*spellInfo*/)
+            {
+                if (!sSpellMgr->GetSpellInfo(SPELL_PALADIN_SHEATH_OF_LIGHT_HEAL))
+                    return false;
+                return true;
+            }
+
+            bool CheckProc(ProcEventInfo& eventInfo)
+            {
+                return eventInfo.GetActor() && eventInfo.GetProcTarget() && eventInfo.GetHitMask() & PROC_EX_NO_OVERHEAL;
+            }
+
+            void HandleProc(AuraEffect const* aurEff, ProcEventInfo& eventInfo)
+            {
+                PreventDefaultAction();
+
+                if (HealInfo* healInfo = eventInfo.GetHealInfo())
+                    if (Unit* healTarget = healInfo->GetTarget())
+                    {
+                        SpellInfo const* spell = sSpellMgr->GetSpellInfo(SPELL_PALADIN_SHEATH_OF_LIGHT_HEAL);
+                        int32 amount = int32(CalculatePct(healInfo->GetHeal(), aurEff->GetAmount()) / spell->GetMaxTicks());
+
+                        eventInfo.GetProcTarget()->CastDelayedSpellWithPeriodicAmount(healTarget, SPELL_PALADIN_SHEATH_OF_LIGHT_HEAL, SPELL_AURA_PERIODIC_HEAL, amount);
+                    }
+            }
+
+        void Register() override
+        {
+            DoCheckProc += AuraCheckProcFn(spell_pal_sheath_of_light_AuraScript::CheckProc);
+            OnEffectProc += AuraEffectProcFn(spell_pal_sheath_of_light_AuraScript::HandleProc, EFFECT_1, SPELL_AURA_DUMMY);
+        }
+    };
+
+    AuraScript* GetAuraScript() const override
+    {
+        return new spell_pal_sheath_of_light_AuraScript();
+    }
+};
 
 // Theirs
 // 31850 - Ardent Defender
@@ -1339,6 +1389,7 @@ void AddSC_paladin_spell_scripts()
     new spell_pal_divine_intervention();
     new spell_pal_seal_of_light();
     new spell_pal_sacred_shield_base();
+    new spell_pal_sheath_of_light();
 
     // Theirs
     new spell_pal_ardent_defender();
