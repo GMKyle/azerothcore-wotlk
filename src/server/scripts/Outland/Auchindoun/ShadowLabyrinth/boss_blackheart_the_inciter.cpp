@@ -2,6 +2,7 @@
  * Originally written by Xinef - Copyright (C) 2016+ AzerothCore <www.azerothcore.org>, released under GNU AGPL v3 license: https://github.com/azerothcore/azerothcore-wotlk/blob/master/LICENSE-AGPL3
 */
 
+#include "PlayerAI.h"
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 #include "shadow_labyrinth.h"
@@ -24,6 +25,23 @@ enum BlackheartTheInciter
     EVENT_SPELL_CHARGE      = 3,
     EVENT_SPELL_KNOCKBACK   = 4
 };
+
+class BlackheartCharmedPlayerAI : public SimpleCharmedPlayerAI
+{
+    using SimpleCharmedPlayerAI::SimpleCharmedPlayerAI;
+    void OnCharmed(bool apply) override
+    {
+        SimpleCharmedPlayerAI::OnCharmed(apply);
+        if (apply)
+            if (Unit* charmer = GetCharmer())
+            {
+                // @todo hack to be removed in new combat system
+                charmer->SetInCombatState(false);
+                me->SetInCombatState(false);
+            }
+    }
+};
+
 
 class boss_blackheart_the_inciter : public CreatureScript
 {
@@ -134,6 +152,11 @@ public:
                 return;
 
             DoMeleeAttackIfReady();
+        }
+
+        PlayerAI* GetAIForCharmedPlayer(Player* player) override
+        {
+            return new BlackheartCharmedPlayerAI(player);
         }
     };
 

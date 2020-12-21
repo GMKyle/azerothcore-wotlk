@@ -32,6 +32,7 @@
 #include "PetAI.h"
 #include "Pet.h"
 #include "Player.h"
+#include "PlayerAI.h"
 #include "QuestDef.h"
 #include "ReputationMgr.h"
 #include "SpellAuraEffects.h"
@@ -12817,8 +12818,11 @@ bool Unit::_IsValidAssistTarget(Unit const* target, SpellInfo const* bySpell) co
         && (!ToCreature() || !(ToCreature()->GetCreatureTemplate()->type_flags & CREATURE_TYPE_FLAG_TREAT_AS_RAID_UNIT)))
         return false;
 
+    // Controlled player case, we can assist creatures (reaction already checked above, our faction == charmer faction)
+    if (GetTypeId() == TYPEID_PLAYER && IsCharmed() && GetCharmer()->GetTypeId() == TYPEID_UNIT)
+        return true;
     // PvP case
-    if (target->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PVP_ATTACKABLE))
+    else if (target->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PVP_ATTACKABLE))
     {
         Player const* targetPlayerOwner = target->GetAffectingPlayer();
         if (HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PVP_ATTACKABLE))
@@ -17055,12 +17059,23 @@ bool Unit::SetCharmedBy(Unit* charmer, CharmType type, AuraApplication const* au
         if (charmer->GetTypeId() == TYPEID_PLAYER && ToCreature()->CanFly())
             AddUnitMovementFlag(MOVEMENTFLAG_FLYING);
     }
-    else
+    else if (Player* player = ToPlayer())
     {
-        Player* player = ToPlayer();
+        //Player* player = ToPlayer();
         if (player->isAFK())
             player->ToggleAFK();
 
+        if (Creature* creatureCharmer = charmer->ToCreature()) // we are charmed by a creature
+        {
+            IsAIEnabled = true;
+            i_disabledAI = i_AI;
+            // set our AI to the charmer's custom charm AI if applicable
+            if (PlayerAI* charmAI = creatureCharmer->AI()->GetAIForCharmedPlayer(player))
+                i_AI = charmAI;
+            else // otherwise use the default charmed player AI
+                i_AI = new SimpleCharmedPlayerAI(player);
+
+        }
         player->SetClientControl(this, false); // verified
     }
 
@@ -17275,8 +17290,26 @@ void Unit::RemoveCharmedBy(Unit* charmer)
         // Xinef: Remove movement flag flying
         RemoveUnitMovementFlag(MOVEMENTFLAG_FLYING);
     }
-    else
-        ToPlayer()->SetClientControl(this, true); // verified
+    else if (Player* player = ToPlayer())
+    {
+        if (charmer->GetTypeId() == TYPEID_UNIT) // charmed by a creature, this means we had PlayerAI
+        {
+            if (i_AI)
+            {
+                // allow charmed player AI to clean up
+                i_AI->OnCharmed(false);
+                // then delete it
+                delete i_AI;
+                // and restore our previous playerAI (if we had one)
+                if ((i_AI = i_disabledAI))
+                    i_disabledAI = nullptr;
+                else
+                    IsAIEnabled = false;
+            }
+        }
+        player->SetClientControl(this, true);
+    }
+        //ToPlayer()->SetClientControl(this, true); // verified
 
     // a guardian should always have charminfo
     if (playerCharmer && this != charmer->GetFirstControlled())

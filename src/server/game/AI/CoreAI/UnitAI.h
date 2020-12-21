@@ -308,7 +308,7 @@ class UnitAI
         virtual void sQuestReward(Player* /*player*/, Quest const* /*quest*/, uint32 /*opt*/) {}
         virtual void sOnGameEvent(bool /*start*/, uint16 /*eventId*/) {}
 };
-
+/*
 class PlayerAI : public UnitAI
 {
     protected:
@@ -325,5 +325,5 @@ class SimpleCharmedAI : public PlayerAI
         void UpdateAI(uint32 diff);
         SimpleCharmedAI(Player* player): PlayerAI(player) {}
 };
-
+*/
 #endif

@@ -238,14 +238,14 @@ void UnitAI::FillAISpellInfo()
         AIInfo->maxRange = spellInfo->GetMaxRange(false) * 3 / 4;
     }
 }
-
+/*
 //Enable PlayerAI when charmed
 void PlayerAI::OnCharmed(bool apply)
 {
     me->IsAIEnabled = apply;
 }
-
-void SimpleCharmedAI::UpdateAI(uint32 /*diff*/)
+//falta comentariar el parametro diff
+void SimpleCharmedAI::UpdateAI(uint32 diff)
 {
   Creature* charmer = me->GetCharmer()->ToCreature();
 
@@ -267,7 +267,7 @@ void SimpleCharmedAI::UpdateAI(uint32 /*diff*/)
     Unit* target = me->GetVictim();
     if (!target || !charmer->IsValidAttackTarget(target))
         AttackStart(charmer->SelectNearestTargetInAttackDistance(ATTACK_DISTANCE));
-}
+}*/
 
 SpellTargetSelector::SpellTargetSelector(Unit* caster, uint32 spellId) :
     _caster(caster), _spellInfo(sSpellMgr->GetSpellForDifficultyFromSpell(sSpellMgr->GetSpellInfo(spellId), caster))

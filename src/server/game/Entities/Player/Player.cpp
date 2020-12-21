@@ -1574,7 +1574,7 @@ void Player::Update(uint32 p_time)
     CheckDuelDistance(now);
 
     UpdateAfkReport(now);
-
+    /*
     // Xinef: update charm AI only if we are controlled by creature or non-posses player charm
     if (IsCharmed() && !HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED))
     {
@@ -1586,7 +1586,9 @@ void Player::Update(uint32 p_time)
                 if (charmer->IsAlive())
                     UpdateCharmedAI();
         }
-    }
+    }*/
+    if (IsAIEnabled && GetAI())
+        GetAI()->UpdateAI(p_time);
 
     if (now > m_Last_tick)
     {
@@ -24898,7 +24900,7 @@ void Player::SetTitle(CharTitlesEntry const* title, bool lost)
     data << uint32(lost ? 0 : 1);                           // 1 - earned, 0 - lost
     GetSession()->SendPacket(&data);
 }
-
+/*
 void Player::UpdateCharmedAI()
 { 
     // Xinef: maybe passed as argument?
@@ -25063,7 +25065,7 @@ void Player::UpdateCharmedAI()
             }
         }
     }
-}
+}*/
 
 uint32 Player::GetRuneBaseCooldown(uint8 index, bool skipGrace)
 { 

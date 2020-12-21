@@ -43,6 +43,7 @@ class PlayerMenu;
 class PlayerSocial;
 class SpellCastTargets;
 class UpdateMask;
+class PlayerAI;
 
 typedef std::deque<Mail*> PlayerMails;
 
@@ -1104,6 +1105,10 @@ class Player : public Unit, public GridObject<Player>
     public:
         explicit Player(WorldSession* session);
         ~Player();
+
+
+        PlayerAI* AI() const { return reinterpret_cast<PlayerAI*>(i_AI); }
+
 
         void CleanupsBeforeDelete(bool finalCleanup = true);
 
@@ -2929,7 +2934,7 @@ class Player : public Unit, public GridObject<Player>
 
         MapReference m_mapRef;
 
-        void UpdateCharmedAI();
+        //void UpdateCharmedAI();
 
         uint32 m_lastFallTime;
         float  m_lastFallZ;

@@ -15,6 +15,7 @@ class WorldObject;
 class Unit;
 class Creature;
 class Player;
+class PlayerAI;
 class SpellInfo;
 
 #define TIME_INTERVAL_LOOK   5000
@@ -159,6 +160,11 @@ class CreatureAI : public UnitAI
         virtual void OnSpellClick(Unit* /*clicker*/, bool& /*result*/) { }
 
         virtual bool CanSeeAlways(WorldObject const* /*obj*/) { return false; }
+
+        // Called when a player is charmed by the creature
+        // If a PlayerAI* is returned, that AI is placed on the player instead of the default charm AI
+        // Object destruction is handled by Unit::RemoveCharmedBy
+        virtual PlayerAI* GetAIForCharmedPlayer(Player* /*who*/) { return nullptr; }
 
         virtual bool CanBeSeen(Player const* /*seer*/) { return true; }
 
